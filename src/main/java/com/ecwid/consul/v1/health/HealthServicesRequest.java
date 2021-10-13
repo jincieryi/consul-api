@@ -25,6 +25,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 	private final QueryParams queryParams;
 	private final String token;
 	private final Filter filter;
+	private final boolean cached;
 
 	private HealthServicesRequest(
 			String datacenter,
@@ -44,6 +45,29 @@ public final class HealthServicesRequest implements ConsulRequest {
 		this.queryParams = queryParams;
 		this.token = token;
 		this.filter = filter;
+		cached = false;
+	}
+
+	private HealthServicesRequest(
+			String datacenter,
+			String near,
+			String[] tags,
+			Map<String, String> nodeMeta,
+			boolean passing,
+			QueryParams queryParams,
+			String token,
+			Filter filter,
+			boolean cached
+	) {
+		this.datacenter = datacenter;
+		this.near = near;
+		this.tags = tags;
+		this.nodeMeta = nodeMeta;
+		this.passing = passing;
+		this.queryParams = queryParams;
+		this.token = token;
+		this.filter = filter;
+		this.cached = cached;
 	}
 
 	public String getDatacenter() {
@@ -101,6 +125,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 		private boolean passing;
 		private QueryParams queryParams;
 		private String token;
+		private boolean cached;
 
 		private Builder() {
 		}
@@ -160,8 +185,16 @@ public final class HealthServicesRequest implements ConsulRequest {
 			return this;
 		}
 
+		/**
+		 * Use cached queries, see https://www.consul.io/api-docs/features/caching
+		 */
+		public Builder setCached(boolean cached) {
+			this.cached = cached;
+			return this;
+		}
+
 		public HealthServicesRequest build() {
-			return new HealthServicesRequest(datacenter, near, tags, nodeMeta, passing, queryParams, token, filter);
+			return new HealthServicesRequest(datacenter, near, tags, nodeMeta, passing, queryParams, token, filter, cached);
 		}
 	}
 
@@ -203,6 +236,11 @@ public final class HealthServicesRequest implements ConsulRequest {
 			params.add(new SingleUrlParameters("token", token));
 		}
 
+		if (cached) {
+			// any value is true
+			params.add(new SingleUrlParameters("cached", "1"));
+		}
+
 		return params;
 	}
 
@@ -222,12 +260,13 @@ public final class HealthServicesRequest implements ConsulRequest {
 			Objects.equals(filter, that.filter) &&
 			Objects.equals(nodeMeta, that.nodeMeta) &&
 			Objects.equals(queryParams, that.queryParams) &&
-			Objects.equals(token, that.token);
+			Objects.equals(token, that.token) &&
+			Objects.equals(cached, that.cached);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = Objects.hash(datacenter, near, nodeMeta, passing, queryParams, token, filter);
+		int result = Objects.hash(datacenter, near, nodeMeta, passing, queryParams, token, filter, cached);
 		result = 31 * result + Arrays.hashCode(tags);
 		return result;
 	}
