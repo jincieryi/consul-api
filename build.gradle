@@ -61,7 +61,7 @@ artifacts {
 
 group = "com.indeed"
 archivesBaseName = "consul-api"
-version = "1.4.7"
+version = "1.4.8"
 
 def doUploadArchives = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 if (doUploadArchives) {
