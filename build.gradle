@@ -59,12 +59,12 @@ artifacts {
 	archives javadocJar
 }
 
+group = "com.indeed"
+archivesBaseName = "consul-api"
+version = "1.4.6"
+
 def doUploadArchives = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 if (doUploadArchives) {
-	group = "com.ecwid.consul"
-	archivesBaseName = "consul-api"
-	version = "1.4.5"
-
 	signing {
 		sign configurations.archives
 	}
