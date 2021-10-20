@@ -32,7 +32,7 @@ public class Filter implements UrlParameters {
 
 		MatchingOperator(final String representation, final boolean unary) {
 			this.representation = representation;
-			encoded = representation.replaceAll(" ", "%20");
+			encoded = representation.replaceAll(" ", SPACE);
 			this.unary = unary;
 		}
 
