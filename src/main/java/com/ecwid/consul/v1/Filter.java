@@ -161,17 +161,20 @@ public class Filter implements UrlParameters {
 		return Objects.hash(children, boolOp, leaf, positive);
 	}
 
+	private static final String SPACE = "%20";
+	private static final String DOUBLEQUOTE = "%22";
+
 	@Override
 	public String toString() {
-		final String prefix = positive ? "" : "not ";
+		final String prefix = positive ? "" : ("not" + SPACE);
 		if (leaf != null) {
 			if (leaf.value != null) {
 				if ((leaf.matchingOperator == MatchingOperator.IN) || (leaf.matchingOperator == MatchingOperator.NOT_IN)) {
-					return String.format(prefix + "\"%s\" %s %s", leaf.value, leaf.matchingOperator, leaf.selector);
+					return prefix + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE + SPACE + leaf.matchingOperator + SPACE + leaf.selector;
 				}
-				return String.format(prefix + "%s %s \"%s\"", leaf.selector, leaf.matchingOperator, leaf.value);
+				return prefix + leaf.selector + SPACE + leaf.matchingOperator + SPACE + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE;
 			}
-			return String.format(prefix + "%s %s", leaf.selector, leaf.matchingOperator);
+			return prefix + leaf.selector + SPACE + leaf.matchingOperator;
 		}
 
 		final String result = children.stream().map(Filter::toString).collect(Collectors.joining(" " + boolOp + " "));
