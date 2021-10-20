@@ -27,10 +27,12 @@ public class Filter implements UrlParameters {
 		NOT_MATCHES("not matches", false);
 
 		private final String representation;
+		private final String encoded;
 		private final boolean unary;
 
 		MatchingOperator(final String representation, final boolean unary) {
 			this.representation = representation;
+			encoded = representation.replaceAll(" ", "%20");
 			this.unary = unary;
 		}
 
@@ -138,7 +140,7 @@ public class Filter implements UrlParameters {
 
 	@Override
 	public List<String> toUrlParameters() {
-		return Collections.singletonList("filter=" + toString());
+		return Collections.singletonList("filter=" + toEncodedString());
 	}
 
 	@Override
@@ -161,23 +163,42 @@ public class Filter implements UrlParameters {
 		return Objects.hash(children, boolOp, leaf, positive);
 	}
 
+	@Override
+	public String toString() {
+		final String prefix = positive ? "" : "not ";
+		if (leaf != null) {
+			if (leaf.value != null) {
+				if ((leaf.matchingOperator == MatchingOperator.IN) || (leaf.matchingOperator == MatchingOperator.NOT_IN)) {
+					return String.format(prefix + "\"%s\" %s %s", leaf.value, leaf.matchingOperator, leaf.selector);
+				}
+				return String.format(prefix + "%s %s \"%s\"", leaf.selector, leaf.matchingOperator, leaf.value);
+			}
+			return String.format(prefix + "%s %s", leaf.selector, leaf.matchingOperator);
+		}
+
+		final String result = children.stream().map(Filter::toString).collect(Collectors.joining(" " + boolOp + " "));
+		if ((parent == null) && positive) {
+			return result;
+		}
+		return prefix + "(" + result + ")";
+	}
+
 	private static final String SPACE = "%20";
 	private static final String DOUBLEQUOTE = "%22";
 
-	@Override
-	public String toString() {
+	public String toEncodedString() {
 		final String prefix = positive ? "" : ("not" + SPACE);
 		if (leaf != null) {
 			if (leaf.value != null) {
 				if ((leaf.matchingOperator == MatchingOperator.IN) || (leaf.matchingOperator == MatchingOperator.NOT_IN)) {
-					return prefix + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE + SPACE + leaf.matchingOperator + SPACE + leaf.selector;
+					return prefix + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE + SPACE + leaf.matchingOperator.encoded + SPACE + leaf.selector;
 				}
-				return prefix + leaf.selector + SPACE + leaf.matchingOperator + SPACE + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE;
+				return prefix + leaf.selector + SPACE + leaf.matchingOperator.encoded + SPACE + DOUBLEQUOTE + leaf.value + DOUBLEQUOTE;
 			}
-			return prefix + leaf.selector + SPACE + leaf.matchingOperator;
+			return prefix + leaf.selector + SPACE + leaf.matchingOperator.encoded;
 		}
 
-		final String result = children.stream().map(Filter::toString).collect(Collectors.joining(" " + boolOp + " "));
+		final String result = children.stream().map(Filter::toEncodedString).collect(Collectors.joining(SPACE + boolOp + SPACE));
 		if ((parent == null) && positive) {
 			return result;
 		}
