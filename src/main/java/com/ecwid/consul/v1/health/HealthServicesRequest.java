@@ -80,7 +80,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 
 	/**
 	 * @deprecated use {@link HealthServicesRequest.Builder#setFilter(Filter)} to filter by tags
-	 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.tags")))}
+	 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.Tags")))}
 	 */
 	@Deprecated
 	public String getTag() {
@@ -89,7 +89,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 
 	/**
 	 * @deprecated use {@link HealthServicesRequest.Builder#setFilter(Filter)} to filter by tags
-	 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.tags")))}
+	 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.Tags")))}
 	 */
 	@Deprecated
 	public String[] getTags() {
@@ -146,7 +146,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 
 		/**
 		 * @deprecated use {@link #setFilter(Filter)}
-		 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.tags")))}
+		 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.Tags")))}
 		 */
 		@Deprecated
 		public Builder setTag(String tag) {
@@ -156,7 +156,7 @@ public final class HealthServicesRequest implements ConsulRequest {
 
 		/**
 		 * @deprecated use {@link #setFilter(Filter)}
-		 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.tags")))}
+		 * e.g {@code * setFilter(Filter.in(tag, Filter.Selector.of("Service.Tags")))}
 		 */
 		@Deprecated
 		public Builder setTags(String[] tags) {
