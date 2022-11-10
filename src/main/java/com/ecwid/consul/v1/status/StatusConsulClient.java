@@ -47,11 +47,13 @@ public final class StatusConsulClient implements StatusClient {
 
 	@Override
 	public Response<String> getStatusLeader() {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/status/leader");
+		HttpResponse<String> httpResponse = rawClient.makeGetRequest("/v1/status/leader", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<String>() {}.getType());
+		});
 
 		if (httpResponse.getStatusCode() == 200) {
-			String value = GsonFactory.getGson().fromJson(httpResponse.getContent(), String.class);
-			return new Response<String>(value, httpResponse);
+			String value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -59,12 +61,13 @@ public final class StatusConsulClient implements StatusClient {
 
 	@Override
 	public Response<List<String>> getStatusPeers() {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/status/peers");
+		HttpResponse<List<String>> httpResponse = rawClient.makeGetRequest("/v1/status/peers", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<String>>() {}.getType());
+		});
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<String> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<String>>() {
-			}.getType());
-			return new Response<List<String>>(value, httpResponse);
+			List<String> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}

@@ -1,24 +1,27 @@
 package com.ecwid.consul.transport;
 
 import org.apache.http.Header;
-import org.apache.http.HeaderIterator;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
-import java.util.logging.Logger;
-import java.util.stream.StreamSupport;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class AbstractHttpTransport implements HttpTransport {
-
-	private static final Logger log = Logger.getLogger(AbstractHttpTransport.class.getName());
 
 	static final int DEFAULT_MAX_CONNECTIONS = 1000;
 	static final int DEFAULT_MAX_PER_ROUTE_CONNECTIONS = 500;
@@ -29,15 +32,15 @@ public abstract class AbstractHttpTransport implements HttpTransport {
 	static final int DEFAULT_READ_TIMEOUT = 1000 * 60 * 10; // 10 min
 
 	@Override
-	public HttpResponse makeGetRequest(HttpRequest request) {
+	public <T> HttpResponse<T> makeGetRequest(HttpRequest request, Function<Reader, T> objConverter) {
 		HttpGet httpGet = new HttpGet(request.getUrl());
 		addHeadersToRequest(httpGet, request.getHeaders());
 
-		return executeRequest(httpGet);
+		return executeRequest(httpGet, objConverter);
 	}
 
 	@Override
-	public HttpResponse makePutRequest(HttpRequest request) {
+	public <T> HttpResponse<T> makePutRequest(HttpRequest request, Function<Reader, T> objConverter) {
 		HttpPut httpPut = new HttpPut(request.getUrl());
 		addHeadersToRequest(httpPut, request.getHeaders());
 		if (request.getContent() != null) {
@@ -46,14 +49,14 @@ public abstract class AbstractHttpTransport implements HttpTransport {
 			httpPut.setEntity(new ByteArrayEntity(request.getBinaryContent()));
 		}
 
-		return executeRequest(httpPut);
+		return executeRequest(httpPut, objConverter);
 	}
 
 	@Override
-	public HttpResponse makeDeleteRequest(HttpRequest request) {
+	public <T> HttpResponse<T> makeDeleteRequest(HttpRequest request, Function<Reader, T> objConverter) {
 		HttpDelete httpDelete = new HttpDelete(request.getUrl());
 		addHeadersToRequest(httpDelete, request.getHeaders());
-		return executeRequest(httpDelete);
+		return executeRequest(httpDelete, objConverter);
 	}
 
 	/**
@@ -63,24 +66,48 @@ public abstract class AbstractHttpTransport implements HttpTransport {
 	 */
 	protected abstract HttpClient getHttpClient();
 
-	private HttpResponse executeRequest(HttpUriRequest httpRequest) {
-		logRequest(httpRequest);
+	private <T> HttpResponse<T> executeRequest(HttpUriRequest httpRequest, Function<Reader, T> objConverter) {
 
 		try {
 			return getHttpClient().execute(httpRequest, response -> {
 				int statusCode = response.getStatusLine().getStatusCode();
 				String statusMessage = response.getStatusLine().getReasonPhrase();
-
-				String content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
 				Long consulIndex = parseUnsignedLong(response.getFirstHeader("X-Consul-Index"));
 				Boolean consulKnownLeader = parseBoolean(response.getFirstHeader("X-Consul-Knownleader"));
 				Long consulLastContact = parseUnsignedLong(response.getFirstHeader("X-Consul-Lastcontact"));
-
-				return new HttpResponse(statusCode, statusMessage, content, consulIndex, consulKnownLeader, consulLastContact);
+				if (statusCode == 200) {
+					HttpEntity entity = response.getEntity();
+					Reader inputReader = new InputStreamReader(entity.getContent(), getCharset(entity));
+					T value = objConverter.apply(inputReader);
+					return new HttpResponse<>(statusCode, statusMessage, value, consulIndex, consulKnownLeader, consulLastContact);
+				}
+				return new HttpResponse<>(
+						statusCode,
+						statusMessage,
+						consulIndex,
+						consulKnownLeader,
+						consulLastContact,
+						EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8)
+				);
 			});
 		} catch (IOException e) {
 			throw new TransportException(e);
+		}
+	}
+
+	private Charset getCharset(HttpEntity entity) {
+		try {
+			ContentType contentType = ContentType.get(entity);
+			if (contentType == null) {
+				return StandardCharsets.UTF_8;
+			}
+			Charset charset = contentType.getCharset();
+			if (charset == null) {
+				return StandardCharsets.UTF_8;
+			}
+			return charset;
+		} catch (UnsupportedCharsetException e) {
+			return StandardCharsets.UTF_8;
 		}
 	}
 
@@ -129,37 +156,4 @@ public abstract class AbstractHttpTransport implements HttpTransport {
 			request.addHeader(name, value);
 		}
 	}
-
-	private void logRequest(HttpUriRequest httpRequest) {
-		StringBuilder sb = new StringBuilder();
-
-		// method
-		sb.append(httpRequest.getMethod());
-		sb.append(" ");
-
-		// url
-		sb.append(httpRequest.getURI());
-		sb.append(" ");
-
-		// headers, if any
-		HeaderIterator iterator = httpRequest.headerIterator();
-		if (iterator.hasNext()) {
-			sb.append("Headers:[");
-
-			Header header = iterator.nextHeader();
-			sb.append(header.getName()).append("=").append(header.getValue());
-
-			while (iterator.hasNext()) {
-				header = iterator.nextHeader();
-				sb.append(header.getName()).append("=").append(header.getValue());
-				sb.append(";");
-			}
-
-			sb.append("] ");
-		}
-
-		//
-		log.finest(sb.toString());
-	}
-
 }

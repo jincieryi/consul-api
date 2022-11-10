@@ -1,12 +1,17 @@
 package com.ecwid.consul;
 
+import com.ecwid.consul.json.GsonFactory;
 import com.ecwid.consul.v1.ConsulRawClient;
 import com.ecwid.consul.v1.QueryParams;
+import com.ecwid.consul.v1.catalog.model.CatalogService;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +39,9 @@ public class ConsulRawClientTest {
                 .build();
 
         // When
-        client.makeGetRequest(ENDPOINT, EMPTY_QUERY_PARAMS);
+        client.makeGetRequest(ENDPOINT, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<String>() {}.getType());
+		}, EMPTY_QUERY_PARAMS);
 
         // Then
         ArgumentCaptor<HttpUriRequest> calledUri = ArgumentCaptor.forClass(HttpUriRequest.class);
@@ -54,7 +61,9 @@ public class ConsulRawClientTest {
                 .build();
 
         // When
-        client.makeGetRequest(ENDPOINT, EMPTY_QUERY_PARAMS);
+        client.makeGetRequest(ENDPOINT, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<String>() {}.getType());
+		}, EMPTY_QUERY_PARAMS);
 
         // Then
         ArgumentCaptor<HttpUriRequest> calledUri = ArgumentCaptor.forClass(HttpUriRequest.class);

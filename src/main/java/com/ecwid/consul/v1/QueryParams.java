@@ -122,7 +122,7 @@ public final class QueryParams implements UrlParameters {
 
 	@Override
 	public List<String> toUrlParameters() {
-		List<String> params = new ArrayList<String>();
+		List<String> params = new ArrayList<>();
 
 		// add basic params
 		if (datacenter != null) {

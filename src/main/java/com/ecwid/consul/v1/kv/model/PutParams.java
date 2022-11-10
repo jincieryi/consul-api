@@ -53,7 +53,7 @@ public class PutParams implements UrlParameters {
 
 	@Override
 	public List<String> toUrlParameters() {
-		List<String> params = new ArrayList<String>();
+		List<String> params = new ArrayList<>();
 
 		if (flags != 0) {
 			params.add("flags=" + flags);

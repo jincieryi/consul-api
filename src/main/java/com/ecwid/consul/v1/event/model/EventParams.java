@@ -51,7 +51,7 @@ public class EventParams implements UrlParameters {
 
 	@Override
 	public List<String> toUrlParameters() {
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 
 		if (name != null) {
 			result.add("name=" + Utils.encodeValue(name));
