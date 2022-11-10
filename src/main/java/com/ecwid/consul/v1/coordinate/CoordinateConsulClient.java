@@ -25,12 +25,13 @@ public class CoordinateConsulClient implements CoordinateClient {
 
 	@Override
 	public Response<List<Datacenter>> getDatacenters() {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/coordinate/datacenters");
+		HttpResponse<List<Datacenter>> httpResponse = rawClient.makeGetRequest("/v1/coordinate/datacenters", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Datacenter>>() {}.getType());
+		});
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Datacenter> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Datacenter>>() {
-			}.getType());
-			return new Response<List<Datacenter>>(value, httpResponse);
+			List<Datacenter> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -38,12 +39,13 @@ public class CoordinateConsulClient implements CoordinateClient {
 
 	@Override
 	public Response<List<Node>> getNodes(QueryParams queryParams) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/coordinate/nodes", queryParams);
+		HttpResponse<List<Node>> httpResponse = rawClient.makeGetRequest("/v1/coordinate/nodes", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Node>>() {}.getType());
+		}, queryParams);
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Node> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Node>>() {
-			}.getType());
-			return new Response<List<Node>>(value, httpResponse);
+			List<Node> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}

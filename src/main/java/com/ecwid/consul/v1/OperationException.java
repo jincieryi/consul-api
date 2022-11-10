@@ -20,7 +20,11 @@ public final class OperationException extends ConsulException {
 	}
 
 	public OperationException(HttpResponse httpResponse) {
-		this(httpResponse.getStatusCode(), httpResponse.getStatusMessage(), httpResponse.getContent());
+		this(httpResponse.getStatusCode(), httpResponse.getStatusMessage(), getContent(httpResponse));
+	}
+
+	private static String getContent(HttpResponse httpResponse) {
+		return httpResponse.getError() != null ? httpResponse.getError() : "";
 	}
 
 	public int getStatusCode() {

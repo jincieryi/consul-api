@@ -1,7 +1,6 @@
 package com.ecwid.consul.json;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * @author Vasily Vasilkov (vgv@ecwid.com)

@@ -2,11 +2,14 @@ package com.ecwid.consul.v1;
 
 import com.ecwid.consul.UrlParameters;
 import com.ecwid.consul.Utils;
+import com.ecwid.consul.json.GsonFactory;
 import com.ecwid.consul.transport.*;
 import org.apache.http.client.HttpClient;
 
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * @author Vasily Vasilkov (vgv@ecwid.com)
@@ -124,11 +127,11 @@ public class ConsulRawClient {
 		this.agentAddress = Utils.assembleAgentAddress(agentHost, agentPort, path);
 	}
 
-	public HttpResponse makeGetRequest(String endpoint, UrlParameters... urlParams) {
-		return makeGetRequest(endpoint, Arrays.asList(urlParams));
+	public <T> HttpResponse<T> makeGetRequest(String endpoint, Function<Reader, T> objConverter, UrlParameters... urlParams) {
+		return makeGetRequest(endpoint, objConverter, Arrays.asList(urlParams));
 	}
 
-	public HttpResponse makeGetRequest(String endpoint, List<UrlParameters> urlParams) {
+	public <T> HttpResponse<T> makeGetRequest(String endpoint, Function<Reader, T> objConverter, List<UrlParameters> urlParams) {
 		String url = prepareUrl(agentAddress + endpoint);
 		url = Utils.generateUrl(url, urlParams);
 
@@ -136,10 +139,10 @@ public class ConsulRawClient {
 			.setUrl(url)
 			.build();
 
-		return httpTransport.makeGetRequest(request);
+		return httpTransport.makeGetRequest(request, objConverter);
 	}
 
-	public HttpResponse makeGetRequest(Request request) {
+	public <T> HttpResponse<T> makeGetRequest(Request request, Function<Reader, T> objConverter) {
 		String url = prepareUrl(agentAddress + request.getEndpoint());
 		url = Utils.generateUrl(url, request.getUrlParameters());
 
@@ -148,10 +151,10 @@ public class ConsulRawClient {
 			.addHeaders(Utils.createTokenMap(request.getToken()))
 			.build();
 
-		return httpTransport.makeGetRequest(httpRequest);
+		return httpTransport.makeGetRequest(httpRequest, objConverter);
 	}
 
-	public HttpResponse makePutRequest(String endpoint, String content, UrlParameters... urlParams) {
+	public <T> HttpResponse<T> makePutRequest(String endpoint, String content, Function<Reader, T> objConverter, UrlParameters... urlParams) {
 		String url = prepareUrl(agentAddress + endpoint);
 		url = Utils.generateUrl(url, urlParams);
 
@@ -160,10 +163,10 @@ public class ConsulRawClient {
 			.setContent(content)
 			.build();
 
-		return httpTransport.makePutRequest(request);
+		return httpTransport.makePutRequest(request, objConverter);
 	}
 
-	public HttpResponse makePutRequest(Request request) {
+	public <T> HttpResponse<T> makePutRequest(Request request, Function<Reader, T> objConverter) {
 		//,  String endpoint, byte[] binaryContent, UrlParameters... urlParams
 		String url = prepareUrl(agentAddress + request.getEndpoint());
 		url = Utils.generateUrl(url, request.getUrlParameters());
@@ -174,10 +177,10 @@ public class ConsulRawClient {
 			.addHeaders(Utils.createTokenMap(request.getToken()))
 			.build();
 
-		return httpTransport.makePutRequest(httpRequest);
+		return httpTransport.makePutRequest(httpRequest, objConverter);
 	}
 
-	public HttpResponse makeDeleteRequest(Request request) {
+	public <T> HttpResponse<T> makeDeleteRequest(Request request, Function<Reader, T> objConverter) {
 		String url = prepareUrl(agentAddress + request.getEndpoint());
 		url = Utils.generateUrl(url, request.getUrlParameters());
 
@@ -186,7 +189,7 @@ public class ConsulRawClient {
 			.addHeaders(Utils.createTokenMap(request.getToken()))
 			.build();
 
-		return httpTransport.makeDeleteRequest(httpRequest);
+		return httpTransport.makeDeleteRequest(httpRequest, objConverter);
 	}
 
 	private String prepareUrl(String url) {
