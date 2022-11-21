@@ -57,9 +57,9 @@ public final class CatalogConsulClient implements CatalogClient {
 		String json = GsonFactory.getGson().toJson(catalogRegistration);
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
 
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/catalog/register", json, tokenParam);
+		HttpResponse<Void> httpResponse = rawClient.makePutRequest("/v1/catalog/register", json, r -> null, tokenParam);
 		if (httpResponse.getStatusCode() == 200) {
-			return new Response<Void>(null, httpResponse);
+			return new Response<>(null, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -75,9 +75,9 @@ public final class CatalogConsulClient implements CatalogClient {
 		String json = GsonFactory.getGson().toJson(catalogDeregistration);
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
 
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/catalog/deregister", json, tokenParam);
+		HttpResponse<Void> httpResponse = rawClient.makePutRequest("/v1/catalog/deregister", json, r -> null, tokenParam);
 		if (httpResponse.getStatusCode() == 200) {
-			return new Response<Void>(null, httpResponse);
+			return new Response<>(null, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -85,12 +85,13 @@ public final class CatalogConsulClient implements CatalogClient {
 
 	@Override
 	public Response<List<String>> getCatalogDatacenters() {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/catalog/datacenters");
+		HttpResponse<List<String>> httpResponse = rawClient.makeGetRequest("/v1/catalog/datacenters", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<String>>() {}.getType());
+		});
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<String> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<String>>() {
-			}.getType());
-			return new Response<List<String>>(value, httpResponse);
+			List<String> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -112,11 +113,12 @@ public final class CatalogConsulClient implements CatalogClient {
 			.addUrlParameters(catalogNodesRequest.asUrlParameters())
 			.build();
 
-		HttpResponse httpResponse = rawClient.makeGetRequest(request);
+		HttpResponse<List<Node>> httpResponse = rawClient.makeGetRequest(request, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Node>>() {}.getType());
+		});
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Node> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Node>>() {
-			}.getType());
+			List<Node> value = httpResponse.getContent();
 			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
@@ -140,13 +142,13 @@ public final class CatalogConsulClient implements CatalogClient {
 
 	@Override
 	public Response<Map<String, List<String>>> getCatalogServices(CatalogServicesRequest catalogServicesRequest) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/catalog/services", catalogServicesRequest.asUrlParameters());
+		HttpResponse<Map<String, List<String>>> httpResponse = rawClient.makeGetRequest("/v1/catalog/services", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<Map<String, List<String>>>() {}.getType());
+		}, catalogServicesRequest.asUrlParameters());
 
 		if (httpResponse.getStatusCode() == 200) {
-			Map<String, List<String>> value = GsonFactory.getGson().fromJson(httpResponse.getContent(),
-					new TypeToken<Map<String, List<String>>>() {
-					}.getType());
-			return new Response<Map<String, List<String>>>(value, httpResponse);
+			Map<String, List<String>> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -188,13 +190,13 @@ public final class CatalogConsulClient implements CatalogClient {
 
 	@Override
 	public Response<List<CatalogService>> getCatalogService(String serviceName, CatalogServiceRequest catalogServiceRequest) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/catalog/service/" + serviceName, catalogServiceRequest.asUrlParameters());
+		HttpResponse<List<com.ecwid.consul.v1.catalog.model.CatalogService>> httpResponse = rawClient.makeGetRequest("/v1/catalog/service/" + serviceName, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<com.ecwid.consul.v1.catalog.model.CatalogService>>() {}.getType());
+		}, catalogServiceRequest.asUrlParameters());
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<com.ecwid.consul.v1.catalog.model.CatalogService> value = GsonFactory.getGson().fromJson(httpResponse.getContent(),
-					new TypeToken<List<com.ecwid.consul.v1.catalog.model.CatalogService>>() {
-					}.getType());
-			return new Response<List<com.ecwid.consul.v1.catalog.model.CatalogService>>(value, httpResponse);
+			List<com.ecwid.consul.v1.catalog.model.CatalogService> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -202,11 +204,13 @@ public final class CatalogConsulClient implements CatalogClient {
 
 	@Override
 	public Response<CatalogNode> getCatalogNode(String nodeName, QueryParams queryParams) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/catalog/node/" + nodeName, queryParams);
+		HttpResponse<CatalogNode> httpResponse = rawClient.makeGetRequest("/v1/catalog/node/" + nodeName, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<CatalogNode>() {}.getType());
+		}, queryParams);
 
 		if (httpResponse.getStatusCode() == 200) {
-			CatalogNode catalogNode = GsonFactory.getGson().fromJson(httpResponse.getContent(), CatalogNode.class);
-			return new Response<CatalogNode>(catalogNode, httpResponse);
+			CatalogNode catalogNode = httpResponse.getContent();
+			return new Response<>(catalogNode, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}

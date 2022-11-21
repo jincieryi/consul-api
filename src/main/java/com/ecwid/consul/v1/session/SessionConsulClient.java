@@ -4,9 +4,9 @@ import com.ecwid.consul.ConsulException;
 import com.ecwid.consul.SingleUrlParameters;
 import com.ecwid.consul.UrlParameters;
 import com.ecwid.consul.json.GsonFactory;
-import com.ecwid.consul.v1.OperationException;
 import com.ecwid.consul.transport.HttpResponse;
 import com.ecwid.consul.v1.ConsulRawClient;
+import com.ecwid.consul.v1.OperationException;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.session.model.NewSession;
@@ -49,12 +49,13 @@ public final class SessionConsulClient implements SessionClient {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
 
 		String json = GsonFactory.getGson().toJson(newSession);
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/session/create", json, queryParams, tokenParam);
+		HttpResponse<Map<String, String>> httpResponse = rawClient.makePutRequest("/v1/session/create", json, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<Map<String, String>>() {}.getType());
+		}, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			Map<String, String> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<Map<String, String>>() {
-			}.getType());
-			return new Response<String>(value.get("ID"), httpResponse);
+			Map<String, String> value = httpResponse.getContent();
+			return new Response<>(value.get("ID"), httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -68,10 +69,10 @@ public final class SessionConsulClient implements SessionClient {
 	@Override
 	public Response<Void> sessionDestroy(String session, QueryParams queryParams, String token) {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/session/destroy/" + session, "", queryParams, tokenParam);
+		HttpResponse<Void> httpResponse = rawClient.makePutRequest("/v1/session/destroy/" + session, "", r -> null, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			return new Response<Void>(null, httpResponse);
+			return new Response<>(null, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -85,16 +86,17 @@ public final class SessionConsulClient implements SessionClient {
 	@Override
 	public Response<Session> getSessionInfo(String session, QueryParams queryParams, String token) {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/session/info/" + session, queryParams, tokenParam);
+		HttpResponse<List<Session>> httpResponse = rawClient.makeGetRequest("/v1/session/info/" + session, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Session>>() {}.getType());
+		}, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Session> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Session>>() {
-			}.getType());
+			List<Session> value = httpResponse.getContent();
 
 			if (value == null || value.isEmpty()) {
-				return new Response<Session>(null, httpResponse);
+				return new Response<>(null, httpResponse);
 			} else if (value.size() == 1) {
-				return new Response<Session>(value.get(0), httpResponse);
+				return new Response<>(value.get(0), httpResponse);
 			} else {
 				throw new ConsulException("Strange response (list size=" + value.size() + ")");
 			}
@@ -111,12 +113,13 @@ public final class SessionConsulClient implements SessionClient {
 	@Override
 	public Response<List<Session>> getSessionNode(String node, QueryParams queryParams, String token) {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/session/node/" + node, queryParams, tokenParam);
+		HttpResponse<List<Session>> httpResponse = rawClient.makeGetRequest("/v1/session/node/" + node, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Session>>() {}.getType());
+		}, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Session> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Session>>() {
-			}.getType());
-			return new Response<List<Session>>(value, httpResponse);
+			List<Session> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -130,12 +133,13 @@ public final class SessionConsulClient implements SessionClient {
 	@Override
 	public Response<List<Session>> getSessionList(QueryParams queryParams, String token) {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/session/list", queryParams, tokenParam);
+		HttpResponse<List<Session>> httpResponse = rawClient.makeGetRequest("/v1/session/list", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Session>>() {}.getType());
+		}, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Session> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Session>>() {
-			}.getType());
-			return new Response<List<Session>>(value, httpResponse);
+			List<Session> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -148,14 +152,15 @@ public final class SessionConsulClient implements SessionClient {
 	@Override
 	public Response<Session> renewSession(String session, QueryParams queryParams, String token) {
 		UrlParameters tokenParam = token != null ? new SingleUrlParameters("token", token) : null;
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/session/renew/" + session, "", queryParams, tokenParam);
+		HttpResponse<List<Session>> httpResponse = rawClient.makePutRequest("/v1/session/renew/" + session, "", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Session>>() {}.getType());
+		}, queryParams, tokenParam);
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Session> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Session>>() {
-			}.getType());
+			List<Session> value = httpResponse.getContent();
 
 			if (value.size() == 1) {
-				return new Response<Session>(value.get(0), httpResponse);
+				return new Response<>(value.get(0), httpResponse);
 			} else {
 				throw new ConsulException("Strange response (list size=" + value.size() + ")");
 			}

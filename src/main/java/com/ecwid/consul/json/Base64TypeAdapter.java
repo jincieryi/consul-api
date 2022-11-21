@@ -18,7 +18,7 @@ public class Base64TypeAdapter extends TypeAdapter<byte[]> {
 		if (value == null) {
 			out.nullValue();
 		} else {
-      out.value(Base64.getEncoder().encodeToString(value));
+			out.value(Base64.getEncoder().encodeToString(value));
 		}
 	}
 

@@ -8,6 +8,7 @@ import com.ecwid.consul.v1.OperationException;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.query.model.QueryExecution;
+import com.google.gson.reflect.TypeToken;
 
 public final class QueryConsulClient implements QueryClient {
 
@@ -37,11 +38,13 @@ public final class QueryConsulClient implements QueryClient {
 
 	@Override
 	public Response<QueryExecution> executePreparedQuery(String uuid, QueryParams queryParams) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/query/" + uuid + "/execute", queryParams);
+		HttpResponse<QueryExecution> httpResponse = rawClient.makeGetRequest("/v1/query/" + uuid + "/execute", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<QueryExecution>() {}.getType());
+		}, queryParams);
 
 		if (httpResponse.getStatusCode() == 200) {
-			QueryExecution queryExecution = GsonFactory.getGson().fromJson(httpResponse.getContent(), QueryExecution.class);
-			return new Response<QueryExecution>(queryExecution, httpResponse);
+			QueryExecution queryExecution = httpResponse.getContent();
+			return new Response<>(queryExecution, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}

@@ -1,16 +1,17 @@
 package com.ecwid.consul.transport;
 
-import java.util.Map;
+import java.io.Reader;
+import java.util.function.Function;
 
 /**
  * @author Vasily Vasilkov (vgv@ecwid.com)
  */
 public interface HttpTransport {
 
-	public HttpResponse makeGetRequest(HttpRequest request);
+	<T> HttpResponse<T> makeGetRequest(HttpRequest request, Function<Reader, T> objConverter);
 
-	public HttpResponse makePutRequest(HttpRequest request);
+	<T> HttpResponse<T> makePutRequest(HttpRequest request, Function<Reader, T> objConverter);
 
-	public HttpResponse makeDeleteRequest(HttpRequest request);
+	<T> HttpResponse<T> makeDeleteRequest(HttpRequest request, Function<Reader, T> objConverter);
 
 }

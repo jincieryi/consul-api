@@ -46,11 +46,13 @@ public final class EventConsulClient implements EventClient {
 
 	@Override
 	public Response<Event> eventFire(String event, String payload, EventParams eventParams, QueryParams queryParams) {
-		HttpResponse httpResponse = rawClient.makePutRequest("/v1/event/fire/" + event, payload, eventParams, queryParams);
+		HttpResponse<Event> httpResponse = rawClient.makePutRequest("/v1/event/fire/" + event, payload, r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<Event>() {}.getType());
+		}, eventParams, queryParams);
 
 		if (httpResponse.getStatusCode() == 200) {
-			Event value = GsonFactory.getGson().fromJson(httpResponse.getContent(), Event.class);
-			return new Response<Event>(value, httpResponse);
+			Event value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}
@@ -73,12 +75,13 @@ public final class EventConsulClient implements EventClient {
 
 	@Override
 	public Response<List<Event>> eventList(EventListRequest eventListRequest) {
-		HttpResponse httpResponse = rawClient.makeGetRequest("/v1/event/list", eventListRequest.asUrlParameters());
+		HttpResponse<List<Event>> httpResponse = rawClient.makeGetRequest("/v1/event/list", r -> {
+			return GsonFactory.getGson().fromJson(r, new TypeToken<List<Event>>() {}.getType());
+		}, eventListRequest.asUrlParameters());
 
 		if (httpResponse.getStatusCode() == 200) {
-			List<Event> value = GsonFactory.getGson().fromJson(httpResponse.getContent(), new TypeToken<List<Event>>() {
-			}.getType());
-			return new Response<List<Event>>(value, httpResponse);
+			List<Event> value = httpResponse.getContent();
+			return new Response<>(value, httpResponse);
 		} else {
 			throw new OperationException(httpResponse);
 		}

@@ -38,7 +38,7 @@ public class Utils {
 			return baseUrl;
 		}
 
-		List<String> allParams = new ArrayList<String>();
+		List<String> allParams = new ArrayList<>();
 		for (UrlParameters item : params) {
 			if (item != null) {
 				allParams.addAll(item.toUrlParameters());
